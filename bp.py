@@ -5,17 +5,13 @@ from sklearn.metrics import confusion_matrix, mean_squared_error
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
-# Step0: 定义函数 light_intensity_parameters() 确定光强对应的光电流函数系数
 def light_intensity_parameters(light_intensity):
     light_intensity = np.array(light_intensity)
-    # A1 = (-0.22) + (0.01) * light_intensity #归一化后的曲线
-    # t1 = -7.42 * 10**(-4) + 1.04 * (1-np.exp(-(light_intensity-23.75)/70.06))
     A1 = (-2.20E-10) + (1.53E-11) * light_intensity
     t1 = -0.01 * np.exp(-light_intensity / 89.36) + 0.63
     return A1, t1
 
 
-# Step1: 导入MNIST数据集
 def load_local_mnist(data_dir=r"D:\Zzj\output\noise_image2"):
     x_train = np.load(f"{data_dir}/x_train_gaussian.npy")
     y_train = np.load(f"{data_dir}/y_train.npy")
@@ -23,135 +19,103 @@ def load_local_mnist(data_dir=r"D:\Zzj\output\noise_image2"):
     y_test = np.load(f"{data_dir}/y_test.npy")
     return (x_train, y_train), (x_test, y_test)
 
-# 加载本地数据
 (x_train, y_train), (x_test, y_test) = load_local_mnist()
 
-# 类别名称
 class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
-# Step2:计算每个像素的灰度值
 def calculate_gray_values(images):
-    gray_values_list = [image.flatten() for image in images]  # 展平每张图像
+    gray_values_list = [image.flatten() for image in images]
     return gray_values_list
-# 调用函数计算灰度值数组
 gray_values_list = calculate_gray_values(x_train)
 
 
-# Step3:灰度值对应光强值
 def calculate_light_intensity(gray_values_list):
     light_intensity_list = []
 
-    for gray_values in gray_values_list:  # 遍历每张图像的灰度值数组
-        # 计算光强值
+    for gray_values in gray_values_list:
         light_intensity = gray_values
         light_intensity_list.append(light_intensity)
 
     return light_intensity_list
-# 调用函数计算光强值数组
 light_intensity_list = calculate_light_intensity(gray_values_list)
 
-#
-# Step4:计算每个像素的光强参数A、t
 def calculate_light_intensity_parameters(light_intensity_list):
     all_A1_t1_list = []
 
-    for light_intensity in light_intensity_list:  # 遍历每张图像的光强值数组
-        A1_t1_values = []  # 存储当前图像的 A1 和 t1 参数值
-        for li in light_intensity:  # 遍历每个像素的光强值
-            A1, t1 = light_intensity_parameters(li)  # 调用 Step0 的函数
+    for light_intensity in light_intensity_list:
+        A1_t1_values = []
+        for li in light_intensity:
+            A1, t1 = light_intensity_parameters(li)
             A1_t1_values.append((A1, t1))
         all_A1_t1_list.append(A1_t1_values)
 
     return all_A1_t1_list
-# 调用函数计算 A1 和 t1 参数
 all_A1_t1_list = calculate_light_intensity_parameters(light_intensity_list)
 
 
-# Step5:得到每个像素的光强参数A、t对应的光电流函数
 def generate_light_current_functions(all_A1_t1_list):
     light_current_function_list = []
 
-    for A1_t1_values in all_A1_t1_list:  # 遍历每张图像的 A1 和 t1 参数
-        light_current_functions = []  # 当前图像的光电流函数
-        for A1, t1 in A1_t1_values:  # 遍历每个像素的 A1 和 t1 参数
-            # 生成光电流函数形式
+    for A1_t1_values in all_A1_t1_list:
+        light_current_functions = []
+        for A1, t1 in A1_t1_values:
             light_current_functions.append((A1, t1))
         light_current_function_list.append(light_current_functions)
 
     return light_current_function_list
-# 调用函数生成光电流函数形式
 light_current_function_list = generate_light_current_functions(all_A1_t1_list)
 
 
 
-# Step6: 给光电流公式赋初始值x=0并计算
 def calculate_light_current_at_x0(all_A1_t1_list, x=0):
     light_current_list = []
 
-    for A1_t1_values in all_A1_t1_list:  # 遍历每张图像的 A1 和 t1 参数
-        light_current = []  # 当前图像的光电流值
-        for A1, t1 in A1_t1_values:  # 遍历每个像素的 A1 和 t1 参数
-            # 计算光电流值
+    for A1_t1_values in all_A1_t1_list:
+        light_current = []
+        for A1, t1 in A1_t1_values:
             light_current_value = A1 * np.exp(-x / t1)
             light_current.append(light_current_value)
         light_current_list.append(light_current)
 
     return light_current_list
-# 调用函数计算 x=0 时的光电流值
 light_current_list = calculate_light_current_at_x0(all_A1_t1_list)
 
-
-#
-# Step7: 根据光电流值计算对应回的灰度值
 def calculate_grayrate(light_current_list, gray_values_list, all_A1_t1_list):
     recalculated_grayrate_list = []
 
     for light_current, gray_values, A1_t1_values in zip(light_current_list, gray_values_list, all_A1_t1_list):
-        recalculated_grayrate = []  # 当前图像重新计算的灰度值
+        recalculated_grayrate = []
         for lc, gray, (A1, _) in zip(light_current, gray_values, A1_t1_values):
-            # 使用公式计算灰度值，并四舍五入后裁剪到 [0, 255]
             grayrate_value = (lc * gray / A1) if A1 != 0 else 0
-            grayrate_value = np.clip(grayrate_value, 0, 255)  # 限制范围
+            grayrate_value = np.clip(grayrate_value, 0, 255)
             recalculated_grayrate.append(grayrate_value)
         recalculated_grayrate_list.append(recalculated_grayrate)
 
     return recalculated_grayrate_list
 
 
-# 调用函数计算重新对应回的灰度值
 recalculated_grayrate_list = calculate_grayrate(light_current_list, gray_values_list, all_A1_t1_list)
 
 
 
 
-# Step8:处理图像，并输出原图像和处理过后的图像。
 def reconstruct_gray_images(recalculated_grayrate_list):
     reconstructed_images = [
         np.array(grayrate).reshape(28, 28) for grayrate in recalculated_grayrate_list
     ]
     return reconstructed_images
-# 调用函数重构灰度图像
 reconstructed_images = reconstruct_gray_images(recalculated_grayrate_list)
 
 
-
-
-# Step6: 计算不同 x 值下的光电流值
 def calculate_light_current_for_x_values(all_A1_t1_list, x_values):
-    """
-    为多个 x 值计算光电流列表。
-    """
     light_current_dict = {}
     for x in x_values:
         light_current_list = calculate_light_current_at_x0(all_A1_t1_list, x=x)
         light_current_dict[x] = light_current_list
     return light_current_dict
 
-# Step7: 计算不同 x 值下的灰度图像
+
 def reconstruct_images_for_x_values(light_current_dict, gray_values_list, all_A1_t1_list):
-    """
-    根据不同 x 值的光电流重新生成灰度图像。
-    """
     reconstructed_images_dict = {}
     for x, light_current_list in light_current_dict.items():
         recalculated_grayrate_list = calculate_grayrate(light_current_list, gray_values_list, all_A1_t1_list)
@@ -160,14 +124,13 @@ def reconstruct_images_for_x_values(light_current_dict, gray_values_list, all_A1
     return reconstructed_images_dict
 
 
-# 数据预处理
 def preprocess_data(images, labels):
     X = np.array(images).astype('float32') / 255.0
-    X = X.reshape((X.shape[0], -1))  # 展平为 (样本数, 784)
+    X = X.reshape((X.shape[0], -1))
     y = labels.flatten()
     return X, y
 
-# Step9-1：构建 BP 网络模型
+
 def build_bp_model(input_shape=784, num_classes=10):
     model = keras.Sequential([
         keras.layers.Dense(512, activation='relu', input_shape=(input_shape,)),
@@ -182,7 +145,6 @@ def build_bp_model(input_shape=784, num_classes=10):
                   metrics=['accuracy'])
     return model
 
-# 计算初始参数
 gray_values_list = calculate_gray_values(x_train)
 light_intensity_list = calculate_light_intensity(gray_values_list)
 all_A1_t1_list = calculate_light_intensity_parameters(light_intensity_list)
@@ -191,30 +153,23 @@ light_current_list = calculate_light_current_at_x0(all_A1_t1_list)
 recalculated_grayrate_list = calculate_grayrate(light_current_list, gray_values_list, all_A1_t1_list)
 reconstructed_images = reconstruct_gray_images(recalculated_grayrate_list)
 
-# 预处理训练集和测试集
 X_train, y_train_processed = preprocess_data(reconstructed_images, y_train)
 X_test, y_test_processed = preprocess_data(x_test, y_test)
 
-# 构建BP模型
 model = build_bp_model()
 
-# 训练模型
 history = model.fit(X_train, y_train_processed, epochs=30, batch_size=128,
                     validation_data=(X_test, y_test_processed))
 
-# 评估模型性能
 y_pred = model.predict(X_test)
 y_pred_classes = np.argmax(y_pred, axis=1)
 
-# 计算分类性能指标
 accuracy = np.mean(y_pred_classes == y_test_processed)
 recall = keras.metrics.Recall()(y_test_processed, y_pred_classes).numpy()
 precision = keras.metrics.Precision()(y_test_processed, y_pred_classes).numpy()
 mse = mean_squared_error(y_test_processed, y_pred_classes)
 conf_matrix = confusion_matrix(y_test_processed, y_pred_classes)
 
-
-# Step10: 迭代 x，寻找最优 x 值 (修改为使用BP网络)
 def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train, y_test, step=0.02, max_x=5, target_accuracy=0.95):
     best_x = None
     best_accuracy = 0
@@ -224,21 +179,17 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
     x0_history = None
     best_history = None
 
-    # 新增：记录每次迭代的数据
-    iteration_data = []  # 存储每次迭代的数据
+    iteration_data = []
 
     current_x = 0
     while current_x < max_x:
-        # 计算光电流值和重构图像
         light_current_list = calculate_light_current_at_x0(all_A1_t1_list, x=current_x)
         recalculated_grayrate_list = calculate_grayrate(light_current_list, gray_values_list, all_A1_t1_list)
         reconstructed_images = reconstruct_gray_images(recalculated_grayrate_list)
 
-        # 预处理数据
         X_train, y_train_processed = preprocess_data(reconstructed_images, y_train)
         X_test, y_test_processed = preprocess_data(x_test, y_test)
 
-        # 构建和训练BP模型
         model = build_bp_model()
         history = model.fit(X_train, y_train_processed, epochs=30, batch_size=128,
                             validation_data=(X_test, y_test_processed), verbose=0)
@@ -249,14 +200,13 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
         print(
             f"x={current_x:.2f}，训练准确率: {train_accuracy:.4f}，验证准确率: {val_accuracy:.4f}，训练损失: {train_loss:.4f}，验证损失: {val_loss:.4f}")
 
-        # 记录当前x的训练数据
         iteration_data.append({
             'x': current_x,
             'train_accuracy': train_accuracy,
             'val_accuracy': val_accuracy,
             'train_loss': train_loss,
             'val_loss': val_loss,
-            'history': history.history  # 存储完整训练历史（可选）
+            'history': history.history  
         })
 
         if current_x == 0:
@@ -268,7 +218,6 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
             best_x = current_x
             best_history = history.history
 
-        # 保存最佳x的训练日志到txt文件
         output_file = f"D:\Zzj\output\curve_new2\BP_bestx_{current_x:.2f}.txt"
         with open(output_file, 'w') as f:
             f.write("Epoch\tTrain_Accuracy\tVal_Accuracy\tTrain_Loss\tVal_Loss\n")
@@ -284,7 +233,6 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
         x_values.append(current_x)
         current_x += step
 
-        # 新增：保存每次迭代的数据到txt文件
         iteration_output_file = "D:\Zzj\output\curve_new2\BP_x.txt"
         with open(iteration_output_file, 'w') as f:
             f.write("x\tTrain_Accuracy\tVal_Accuracy\tTrain_Loss\tVal_Loss\n")
@@ -295,12 +243,11 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
 
     return best_x, best_accuracy, x0_accuracy, accuracy_trend, x_values, x0_history, best_history
 
-# 调用优化函数
 best_x, best_accuracy, x0_accuracy, accuracy_trend, x_values, x0_history, best_history = optimize_x_for_accuracy_exclude_x0(
     all_A1_t1_list, gray_values_list, y_train, y_test, step=0.02, max_x=5, target_accuracy=0.6
 )
 
-# 打印结果
+
 print(f"x=0 的准确率: {x0_accuracy:.4f}")
 if best_x is not None:
     print(f"最佳 x 值（除 x=0 外）: {best_x}")
@@ -308,10 +255,9 @@ if best_x is not None:
 else:
     print("未找到除 x=0 外准确率大于等于目标值的点。")
 
-# 绘制结果
+
 plt.figure(figsize=(15, 5))
 
-# 图1: x=0 和最佳 x 的准确率和损失率对比
 if best_x is not None:
     plt.subplot(1, 2, 1)
     plt.plot(x0_history['accuracy'], label='accuracy when x=0 ', linestyle='--')
@@ -323,29 +269,23 @@ if best_x is not None:
     plt.ylabel('Value')
     plt.legend()
 
-# 保存图1的数据到 txt 文件
 def save_plot1_data(x0_history, best_history, best_x, filename="D:\Zzj\output\curve_new2\BP_plot1_comparison_data.txt"):
     with open(filename, 'w') as f:
-        # 写入表头
         f.write("Epoch\tx0_Train_Accuracy\tx0_Val_Accuracy\tx0_Train_Loss\tx0_Val_Loss\t")
         f.write(f"bestx_Train_Accuracy\tbestx_Val_Accuracy\tbestx_Train_Loss\tbestx_Val_Loss\n")
 
-        # 确保 x0_history 和 best_history 的 epoch 数相同
         num_epochs = len(x0_history['accuracy'])
         for epoch in range(num_epochs):
-            # x=0 的数据
             x0_train_acc = x0_history['accuracy'][epoch]
             x0_val_acc = x0_history['val_accuracy'][epoch]
             x0_train_loss = x0_history['loss'][epoch]
             x0_val_loss = x0_history['val_loss'][epoch]
 
-            # 最佳 x 的数据
             best_train_acc = best_history['accuracy'][epoch]
             best_val_acc = best_history['val_accuracy'][epoch]
             best_train_loss = best_history['loss'][epoch]
             best_val_loss = best_history['val_loss'][epoch]
 
-            # 写入一行数据
             f.write(
                 f"{epoch + 1}\t{x0_train_acc:.4f}\t{x0_val_acc:.4f}\t{x0_train_loss:.4f}\t{x0_val_loss:.4f}\t"
                 f"{best_train_acc:.4f}\t{best_val_acc:.4f}\t{best_train_loss:.4f}\t{best_val_loss:.4f}\n"
@@ -353,14 +293,12 @@ def save_plot1_data(x0_history, best_history, best_x, filename="D:\Zzj\output\cu
     print(f"图1的对比数据已保存到: {filename}")
 
 
-# 调用函数保存数据
 if best_x is not None:
     save_plot1_data(x0_history, best_history, best_x)
 else:
     print("未找到最佳 x 值，无法保存图1数据。")
 
 
-# 图2: 随 x 迭代变化的准确率趋势
 plt.subplot(1, 2, 2)
 plt.plot(x_values, accuracy_trend, marker='o', label='Accuracy trends')
 plt.title('Trend of accuracy with x')
