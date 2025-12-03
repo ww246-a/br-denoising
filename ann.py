@@ -9,7 +9,7 @@ from matplotlib import rcParams
 def light_intensity_parameters(light_intensity):
     light_intensity = np.array(light_intensity)
     A1 = (-2.20E-10) + (1.53E-11) * light_intensity
-    t1 = -0.01 * np.exp(-light_intensity / 89.36) + 0.63
+    t1 = -0.1 * np.exp(-light_intensity / 89.36) + 0.63
     return A1, t1
 
 
