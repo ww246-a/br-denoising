@@ -27,7 +27,7 @@ def load_local_mnist(data_dir=r"D:\Zzj\output\noise_image2"):
 #class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
 def calculate_gray_values(images):
-    gray_values_list = [image.flatten() for image in images]  # 展平每张图像
+    gray_values_list = [image.flatten() for image in images]  
     return gray_values_list
 gray_values_list = calculate_gray_values(x_train)
 
