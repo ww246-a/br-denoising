@@ -290,8 +290,8 @@ if best_x is not None:
     plt.plot(x0_history['loss'], label='loss when x=0', linestyle='--')
     plt.plot(best_history['loss'], label=f'loss when x={best_x:.2f} ', linestyle='-')
     plt.title('Comparison of accuracy and loss rate for x=0 and optimal x')
-    plt.xlabel('Iteration Number')
-    plt.ylabel('Value:')
+    plt.xlabel('epoch')
+    plt.ylabel('Value')
     plt.legend()
 
 
