@@ -219,7 +219,7 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
         train_accuracy = history.history['accuracy'][-1]
         train_loss = history.history['loss'][-1]
         print(
-            f"x={current_x:.2f}，训练准确率: {train_accuracy:.4f}，验证准确率: {val_accuracy:.4f}，训练损失: {train_loss:.4f}，验证损失: {val_loss:.4f}")
+            f"x={current_x:.2f}，training accuracy: {train_accuracy:.4f}，validation accuracy: {val_accuracy:.4f}，training loss: {train_loss:.4f}，validation loss: {val_loss:.4f}")
 
         iteration_data.append({
             'x': current_x,
@@ -249,7 +249,7 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
                 train_loss = history.history['loss'][epoch]
                 val_loss = history.history['val_loss'][epoch]
                 f.write(f"{epoch + 1}\t{train_acc:.4f}\t{val_acc:.4f}\t{train_loss:.4f}\t{val_loss:.4f}\n")
-        print(f"最佳x={current_x:.2f}的训练日志已保存到: {output_file}")
+        print(f"The training log for the best x = {current_x:.2f} has been saved to: {output_file}")
 
         accuracy_trend.append(val_accuracy)
         x_values.append(current_x)
@@ -262,7 +262,7 @@ def optimize_x_for_accuracy_exclude_x0(all_A1_t1_list, gray_values_list, y_train
             for data in iteration_data:
                 f.write(
                     f"{data['x']:.2f}\t{data['train_accuracy']:.4f}\t{data['val_accuracy']:.4f}\t{data['train_loss']:.4f}\t{data['val_loss']:.4f}\n")
-        print(f"每次迭代x的数据已保存到: {iteration_output_file}")
+        print(f"The data for x at each iteration has been saved to: {iteration_output_file}")
 
     return best_x, best_accuracy, x0_accuracy, accuracy_trend, x_values, x0_history, best_history
 
@@ -272,12 +272,12 @@ best_x, best_accuracy, x0_accuracy, accuracy_trend, x_values, x0_history, best_h
 )
 
 
-print(f"x=0 的准确率: {x0_accuracy:.4f}")
+print(f"Accuracy at x = 0 : {x0_accuracy:.4f}")
 if best_x is not None:
-    print(f"最佳 x 值（除 x=0 外）: {best_x}")
-    print(f"最佳准确率（除 x=0 外）: {best_accuracy:.4f}")
+    print(f"Best x value (excluding x = 0): {best_x}")
+    print(f"Best accuracy (excluding x = 0):{best_accuracy:.4f}")
 else:
-    print("未找到除 x=0 外准确率大于等于目标值的点。")
+    print("No point (excluding x = 0) was found with accuracy greater than or equal to the target value.")
 
 
 plt.figure(figsize=(15, 5))
@@ -291,7 +291,7 @@ if best_x is not None:
     plt.plot(best_history['loss'], label=f'loss when x={best_x:.2f} ', linestyle='-')
     plt.title('Comparison of accuracy and loss rate for x=0 and optimal x')
     plt.xlabel('Iteration Number')
-    plt.ylabel('值')
+    plt.ylabel('Value:')
     plt.legend()
 
 
@@ -317,12 +317,12 @@ def save_plot1_data(x0_history, best_history, best_x, filename="D:\Zzj\output\cu
                 f"{epoch + 1}\t{x0_train_acc:.4f}\t{x0_val_acc:.4f}\t{x0_train_loss:.4f}\t{x0_val_loss:.4f}\t"
                 f"{best_train_acc:.4f}\t{best_val_acc:.4f}\t{best_train_loss:.4f}\t{best_val_loss:.4f}\n"
             )
-    print(f"图1的对比数据已保存到: {filename}")
+    print(f"The comparison data for Figure 1 has been saved to: {filename}")
 
 if best_x is not None:
     save_plot1_data(x0_history, best_history, best_x)
 else:
-    print("未找到最佳 x 值，无法保存图1数据。")
+    print("No best x value was found; unable to save Figure 1 data.")
 
 
 plt.subplot(1, 2, 2)
