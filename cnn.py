@@ -5,8 +5,6 @@ from sklearn.metrics import confusion_matrix, mean_squared_error
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
-rcParams['font.sans-serif'] = ['SimHei']
-rcParams['axes.unicode_minus'] = False
 
 def light_intensity_parameters(light_intensity):
     light_intensity = np.array(light_intensity)
