@@ -33,7 +33,7 @@ def calculate_light_intensity(gray_values_list):
     light_intensity_list = []
 
     for gray_values in gray_values_list:
-        light_intensity = gray_values
+        light_intensity = 137/255 * gray_values
         light_intensity_list.append(light_intensity)
 
     return light_intensity_list
