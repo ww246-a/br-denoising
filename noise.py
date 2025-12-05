@@ -31,7 +31,7 @@ np.save(f"{save_dir}/y_train.npy", y_train)
 np.save(f"{save_dir}/x_test_gaussian.npy", x_test_gaussian)
 np.save(f"{save_dir}/y_test.npy", y_test)
 
-print(f"带噪声的数据集已保存到目录: {save_dir}")
+print(f"The noisy dataset has been saved to the directory: {save_dir}")
 
 import matplotlib.pyplot as plt
 
